@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hospital Cleaning Service Data Collection</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        .data-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input { padding: 8px; flex: 1; min-width: 150px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; }
+        .add-btn { background: #4CAF50; color: white; margin-right: 10px; }
+        .remove-btn { background: #f44336; color: white; }
+        .submit-btn { background: #2196F3; color: white; margin-top: 10px; }
+        #successMsg, #errorMsg { 
+            display: none; 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            padding: 15px; 
+            border-radius: 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #successMsg { background: #4CAF50; color: white; }
+        #errorMsg { background: #f44336; color: white; }
+        #loadingIndicator {
+            display: none;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Hospital Cleaning Service Data Collection</h2>
+        <div id="successMsg">✅ Data Submitted Successfully!</div>
+        <div id="errorMsg">❌ Error submitting data!</div>
+        
+        <!-- Using a traditional form submission approach -->
+        <form id="dataForm" target="hidden-iframe" method="POST" action="https://script.google.com/macros/s/AKfycbymr3n0_F-1Q7wZdMgcaEAOXhM0ly17X5S3fuSqc-3ch7P98suIQkg_WHlvUlnn0W1dUQ/exec">
+            <input type="hidden" name="data" id="formData">
+            
+            <div id="rowsContainer">
+                <div class="data-row">
+                    <input type="text" placeholder="Hospital Name (රෝහලේ නම)" required>
+                    <input type="text" placeholder="Company Name (පිරිසිදු කිරීමේ ආයතනය)" required>
+                    <input type="text" placeholder="Month (බිල්පතට අදාල මාසය)" required>
+                    <input type="number" placeholder="Arrears (හිග මුදල)" required>
+                    <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
+                </div>
+            </div>
+            <button type="button" class="add-btn" onclick="addRow()">Add Row</button>
+            <button type="submit" class="submit-btn">Submit Data</button>
+            <span id="loadingIndicator">Submitting...</span>
+        </form>
+        
+        <!-- Hidden iframe for form submission -->
+        <iframe name="hidden-iframe" id="hidden-iframe" style="display:none;"></iframe>
+    </div>
+
+    <script>
+        function addRow() {
+            const row = document.createElement('div');
+            row.className = 'data-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Hospital Name (රෝහලේ නම)" required>
+                <input type="text" placeholder="Company Name (පිරිසිදු කිරීමේ ආයතනය)" required>
+                <input type="text" placeholder="Month (බිල්පතට අදාල මාසය)" required>
+                <input type="number" placeholder="Arrears (හිග මුදල)" required>
+                <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
+            `;
+            document.getElementById('rowsContainer').appendChild(row);
+        }
+
+        function removeRow(btn) {
+            if (document.querySelectorAll('.data-row').length > 1) {
+                btn.closest('.data-row').remove();
+            } else {
+                alert("You need at least one row of data.");
+            }
+        }
+
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            const submitBtn = document.querySelector('.submit-btn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // Reset submission state
+            submitBtn.disabled = false;
+            loadingIndicator.style.display = 'none';
+            
+            if (event.data === 'success') {
+                // Show success message
+                const msg = document.getElementById('successMsg');
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 3000);
+                
+                // Clear form
+                document.getElementById('dataForm').reset();
+                
+                // Keep only one row
+                const rows = document.querySelectorAll('.data-row');
+                for (let i = 1; i < rows.length; i++) {
+                    rows[i].remove();
+                }
+            } else if (event.data.startsWith('error:')) {
+                // Show error message
+                const msg = document.getElementById('errorMsg');
+                msg.textContent = '❌ ' + event.data.substring(6);
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 5000);
+            }
+        });
+
+        // Form submission handler
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            // Collect data from all rows
+            const rows = Array.from(document.querySelectorAll('.data-row'));
+            
+            // Convert data to JSON
+            const dataArray = rows.map(row => {
+                const inputs = row.querySelectorAll('input');
+                return {
+                    hospital: inputs[0].value,
+                    company: inputs[1].value,
+                    month: inputs[2].value,
+                    arrears: inputs[3].value
+                };
+            });
+            
+            // Add the JSON data to the hidden field
+            document.getElementById('formData').value = JSON.stringify(dataArray);
+            
+            // Show loading state
+            document.querySelector('.submit-btn').disabled = true;
+            document.getElementById('loadingIndicator').style.display = 'inline';
+        });
+    </script>
+</body>
+</html>
