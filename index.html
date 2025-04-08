@@ -1,40 +1,282 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Hospital Cleaning Service Data Collection(Deputy Director General (Logistics)</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Cleaning Service Data Collection</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .container { max-width: 1000px; margin: 20px auto; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        .data-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        input { padding: 8px; flex: 1; min-width: 150px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; }
-        .add-btn { background: #4CAF50; color: white; margin-right: 10px; }
-        .remove-btn { background: #f44336; color: white; }
-        .submit-btn { background: #2196F3; color: white; margin-top: 10px; }
-        #successMsg, #errorMsg { 
-            display: none; 
-            position: fixed; 
-            top: 20px; 
-            right: 20px; 
-            padding: 15px; 
-            border-radius: 5px; 
+        :root {
+            --primary-color: #1976D2;
+            --primary-light: #BBDEFB;
+            --primary-dark: #0D47A1;
+            --success-color: #4CAF50;
+            --danger-color: #f44336;
+            --text-color: #333;
+            --light-text: #fff;
+            --border-color: #ddd;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --border-radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            position: relative;
+        }
+        
+        h2 {
+            color: var(--primary-dark);
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 15px;
+        }
+        
+        .data-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .data-row:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        input::placeholder {
+            color: #aaa;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-btn {
+            background: var(--primary-color);
+            color: var(--light-text);
+            margin-right: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .add-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .remove-btn {
+            background: var(--danger-color);
+            color: var(--light-text);
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 1.2rem;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        #successMsg { background: #4CAF50; color: white; }
-        #errorMsg { background: #f44336; color: white; }
+        
+        .remove-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.1);
+        }
+        
+        .submit-btn {
+            background: var(--success-color);
+            color: var(--light-text);
+            margin-top: 10px;
+            padding: 14px 25px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            display: block;
+        }
+        
+        .submit-btn:hover {
+            background: #388E3C;
+        }
+        
+        .notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        #successMsg {
+            background: var(--success-color);
+            color: var(--light-text);
+        }
+        
+        #errorMsg {
+            background: var(--danger-color);
+            color: var(--light-text);
+        }
+        
         #loadingIndicator {
             display: none;
             margin-left: 10px;
+            position: relative;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .data-row {
+                flex-direction: column;
+                padding: 20px 15px 15px;
+            }
+            
+            .input-group {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .remove-btn {
+                top: -10px;
+                right: -5px;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .add-btn, .submit-btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px 12px;
+            }
+            
+            h2 {
+                font-size: 1.3rem;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            
+            input {
+                padding: 10px;
+            }
+            
+            .notification {
+                left: 10px;
+                right: 10px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Hospital Cleaning Service Data Collection (Deputy Director General (Logistics) </h2>
-        <div id="successMsg">✅ Data Submitted Successfully!</div>
-        <div id="errorMsg">❌ Error submitted data!</div>
+        <h2>Hospital Cleaning Service Data Collection</h2>
+        <div id="successMsg" class="notification">✅ Data Submitted Successfully!</div>
+        <div id="errorMsg" class="notification">❌ Error submitting data!</div>
         
         <!-- Using a traditional form submission approach -->
         <form id="dataForm" target="hidden-iframe" method="POST" action="https://script.google.com/macros/s/AKfycbymr3n0_F-1Q7wZdMgcaEAOXhM0ly17X5S3fuSqc-3ch7P98suIQkg_WHlvUlnn0W1dUQ/exec">
@@ -42,16 +284,34 @@
             
             <div id="rowsContainer">
                 <div class="data-row">
-                    <input type="text" placeholder="Hospital Name (රෝහලේ නම)" required>
-                    <input type="text" placeholder="Company Name (පිරිසිදු කිරීමේ ආයතනය)" required>
-                    <input type="text" placeholder="Month (බිල්පතට අදාල මාසය)" required>
-                    <input type="number" placeholder="Arrears (හිග මුදල)" required>
+                    <div class="input-group">
+                        <label class="input-label">Hospital Name (රෝහලේ නම)</label>
+                        <input type="text" placeholder="Enter hospital name" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Company Name (පිරිසිදු කිරීමේ ආයතනය)</label>
+                        <input type="text" placeholder="Enter company name" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Month (බිල්පතට අදාල මාසය)</label>
+                        <input type="text" placeholder="Enter month" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Arrears (හිග මුදල)</label>
+                        <input type="number" placeholder="Enter amount" required>
+                    </div>
                     <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
                 </div>
             </div>
-            <button type="button" class="add-btn" onclick="addRow()">Add Row</button>
-            <button type="submit" class="submit-btn">Submit Data</button>
-            <span id="loadingIndicator">Submitted</span>
+            
+            <button type="button" class="add-btn" onclick="addRow()">+ Add Another Entry</button>
+            
+            <div class="btn-container">
+                <button type="submit" class="submit-btn">
+                    Submit Data
+                    <div id="loadingIndicator"></div>
+                </button>
+            </div>
         </form>
         
         <!-- Hidden iframe for form submission -->
@@ -63,10 +323,22 @@
             const row = document.createElement('div');
             row.className = 'data-row';
             row.innerHTML = `
-                <input type="text" placeholder="Hospital Name (රෝහලේ නම)" required>
-                <input type="text" placeholder="Company Name (පිරිසිදු කිරීමේ ආයතනය)" required>
-                <input type="text" placeholder="Month (බිල්පතට අදාල මාසය)" required>
-                <input type="number" placeholder="Arrears (හිග මුදල)" required>
+                <div class="input-group">
+                    <label class="input-label">Hospital Name (රෝහලේ නම)</label>
+                    <input type="text" placeholder="Enter hospital name" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Company Name (පිරිසිදු කිරීමේ ආයතනය)</label>
+                    <input type="text" placeholder="Enter company name" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Month (බිල්පතට අදාල මාසය)</label>
+                    <input type="text" placeholder="Enter month" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Arrears (හිග මුදල)</label>
+                    <input type="number" placeholder="Enter amount" required>
+                </div>
                 <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
             `;
             document.getElementById('rowsContainer').appendChild(row);
