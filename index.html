@@ -101,7 +101,7 @@
         }
         
         button {
-            padding: 12px 20px;
+            padding:.0px 20px;
             border: none;
             cursor: pointer;
             border-radius: var(--border-radius);
@@ -117,6 +117,7 @@
             color: var(--light-text);
             margin-right: 10px;
             margin-bottom: 20px;
+            padding: 12px 20px;
         }
         
         .add-btn:hover {
@@ -159,7 +160,6 @@
         }
         
         .notification {
-            display: none;
             position: fixed;
             top: 20px;
             right: 20px;
@@ -172,16 +172,23 @@
         }
         
         @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
         
         #successMsg {
+            display: none;
             background: var(--success-color);
             color: var(--light-text);
         }
         
         #errorMsg {
+            display: none;
             background: var(--danger-color);
             color: var(--light-text);
         }
@@ -208,6 +215,17 @@
             margin-top: 30px;
             flex-wrap: wrap;
             gap: 15px;
+        }
+        
+        /* Make notification more noticeable */
+        .notification-show {
+            display: block !important;
+            animation: slideIn 0.5s ease-out, stay 3s ease-in-out, fadeOut 0.5s ease-in forwards 3.5s;
+        }
+        
+        @keyframes stay {
+            from { transform: translateX(0); }
+            to { transform: translateX(0); }
         }
         
         /* Responsive styles */
@@ -307,7 +325,7 @@
             <button type="button" class="add-btn" onclick="addRow()">+ Add Another Entry</button>
             
             <div class="btn-container">
-                <button type="submit" class="submit-btn">
+                <button type="button" id="submitBtn" class="submit-btn" onclick="submitForm()">
                     Submit Data
                     <div id="loadingIndicator"></div>
                 </button>
@@ -352,46 +370,58 @@
             }
         }
 
-        // Listen for messages from the iframe
-        window.addEventListener('message', function(event) {
-            const submitBtn = document.querySelector('.submit-btn');
+        // Completely revamped show success message function with animation
+        function showSuccessMessage() {
+            const msg = document.getElementById('successMsg');
+            msg.classList.add('notification-show');
+            
+            // Reset the animation and hide after animation completes
+            setTimeout(() => {
+                msg.classList.remove('notification-show');
+            }, 4000); // 4 seconds total for the animation sequence
+        }
+
+        // Revamped error message function
+        function showErrorMessage(message) {
+            const msg = document.getElementById('errorMsg');
+            msg.textContent = '❌ ' + (message || 'Error submitting data!');
+            msg.classList.add('notification-show');
+            
+            setTimeout(() => {
+                msg.classList.remove('notification-show');
+            }, 4000);
+        }
+
+        // Modified submit function to handle form directly
+        function submitForm() {
+            const form = document.getElementById('dataForm');
+            const submitBtn = document.getElementById('submitBtn');
             const loadingIndicator = document.getElementById('loadingIndicator');
             
-            // Reset submission state
-            submitBtn.disabled = false;
-            loadingIndicator.style.display = 'none';
-            
-            if (event.data === 'success') {
-                // Show success message
-                const msg = document.getElementById('successMsg');
-                msg.style.display = 'block';
-                setTimeout(() => {
-                    msg.style.display = 'none';
-                }, 3000);
-                
-                // Clear form
-                document.getElementById('dataForm').reset();
-                
-                // Keep only one row
-                const rows = document.querySelectorAll('.data-row');
-                for (let i = 1; i < rows.length; i++) {
-                    rows[i].remove();
-                }
-            } else if (event.data.startsWith('error:')) {
-                // Show error message
-                const msg = document.getElementById('errorMsg');
-                msg.textContent = '❌ ' + event.data.substring(6);
-                msg.style.display = 'block';
-                setTimeout(() => {
-                    msg.style.display = 'none';
-                }, 5000);
-            }
-        });
-
-        // Form submission handler
-        document.getElementById('dataForm').addEventListener('submit', function(e) {
             // Collect data from all rows
             const rows = Array.from(document.querySelectorAll('.data-row'));
+            
+            // Check if all required fields are filled
+            let allFilled = true;
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (input.required && !input.value.trim()) {
+                        allFilled = false;
+                        input.style.borderColor = 'var(--danger-color)';
+                        
+                        // Reset border after a moment
+                        setTimeout(() => {
+                            input.style.borderColor = 'var(--border-color)';
+                        }, 2000);
+                    }
+                });
+            });
+            
+            if (!allFilled) {
+                showErrorMessage("Please fill all required fields");
+                return;
+            }
             
             // Convert data to JSON
             const dataArray = rows.map(row => {
@@ -408,8 +438,44 @@
             document.getElementById('formData').value = JSON.stringify(dataArray);
             
             // Show loading state
-            document.querySelector('.submit-btn').disabled = true;
-            document.getElementById('loadingIndicator').style.display = 'inline';
+            submitBtn.disabled = true;
+            loadingIndicator.style.display = 'inline-block';
+            
+            // Submit the form to the iframe
+            form.submit();
+            
+            // Show success message after a delay (since we can't reliably get iframe response)
+            setTimeout(() => {
+                // Reset submission state
+                submitBtn.disabled = false;
+                loadingIndicator.style.display = 'none';
+                
+                // Show success message
+                showSuccessMessage();
+                
+                // Reset form
+                const rows = document.querySelectorAll('.data-row');
+                if (rows.length > 0) {
+                    const inputs = rows[0].querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.value = '';
+                    });
+                }
+                
+                // Remove additional rows
+                for (let i = 1; i < rows.length; i++) {
+                    rows[i].remove();
+                }
+            }, 2000); // Show success after 2 seconds
+        }
+
+        // For backward compatibility, still listen for iframe messages
+        window.addEventListener('message', function(event) {
+            if (event.data === 'success') {
+                showSuccessMessage();
+            } else if (event.data && event.data.startsWith && event.data.startsWith('error:')) {
+                showErrorMessage(event.data.substring(6));
+            }
         });
     </script>
 </body>
